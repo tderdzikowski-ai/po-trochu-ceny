@@ -1,0 +1,23 @@
+name: Codzienne notowania
+on:
+  schedule:
+    - cron: '35 22 * * 1-5'   # po zamknięciu giełdy w USA (pn–pt)
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node fetch.mjs
+      - name: Zapisz zmiany
+        run: |
+          git config user.name "po-trochu-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add prices
+          git diff --cached --quiet || git commit -m "Notowania $(date -u +%F)"
+          git push
